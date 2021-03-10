@@ -1,29 +1,17 @@
 import secrets
 from nummaster.basic import sqrtmod
-Pcurve = 2**256 - 2**32 - 2**9 - 2**8 - 2**7 - 2**6 - 2**4 -1 # The proven prime
-N='0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141' # Number of points in the field
-Acurve = 0; Bcurve = 7 # These two defines the elliptic curve. y^2 = x^3 + Acurve * x + Bcurve
+Pcurve = 2**256 - 2**32 - 2**9 - 2**8 - 2**7 - 2**6 - 2**4 -1 
+N='0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141' 
+Acurve = 0; Bcurve = 7 
 Gx = 55066263022277343669578718895168534326250603453777594175500187360389116729240
 Gy = 32670510020758816978083085130507043184471273380659243275938904335757337482424
 GPoint = (Gx,Gy) 
 privKey= secrets.randbelow(int(N,16))
-# privKey=72759466100064397073952777052424474334519735946222029294952053344302920927294
-print(type(privKey))
-# def egcd(a, b):
-#     if a == 0:
-#         return (b, 0, 1)
-#     else:
-#         g, y, x = egcd(b % a, a)
-#         return (g, x - (b // a) * y, y)
+RandNum =secrets.randbelow(int(N,16)) #replace with a truly random number
+HashOfThingToSign=86032112319101611046176971828093669637772856272773459297323797145286374828050
 
-# def modinv(a, m=Pcurve):
-#     g, x, y = egcd(a, m)
-#     print("sha")
-#     print(g)
-#     if g != 1:
-#         raise Exception('modular inverse does not exist')
-#     else:
-#         return x % m
+print(type(privKey))
+
 def modinv(a,n=Pcurve): 
     lm, hm = 1,0
     low, high = a%n,n
@@ -51,11 +39,11 @@ def EccMultiply(GenPoint,ScalarHex):
     
     Q=GenPoint
    
-    for i in range (1, len(ScalarBin)): # This is invented EC multiplication.
-        Q=ECdouble(Q); # print "DUB", Q[0]; print
+    for i in range (1, len(ScalarBin)): 
+        Q=ECdouble(Q)
         if ScalarBin[i] == "1":
             Q=ECadd(Q,GenPoint);
-            # print "ADD", Q[0]; print
+           
     return (Q)
 
 
@@ -68,7 +56,8 @@ def uncompress_point(compressed_point, p, a, b):
     if bool(is_odd) == bool(y & 1):
         return (x, y)
     return (x, p - y)
-# print(str(bin(hex(privKey))))
+
+
 
 PublicKey = EccMultiply(GPoint,privKey)
 print("the private key:")
@@ -78,15 +67,19 @@ print(PublicKey)
 print("Compressed form of public key:")
 compressed_point=compress_point(PublicKey)
 print(compressed_point)
-# print("the uncompressed public key (not address):")
-# # uncompressed_public_key=uncompress_point(compressed_point,Pcurve,Acurve,Bcurve)
-# print(uncompressed_public_key)
-# print((GPoint*privKey)[0])
-# print("the uncompressed public key (HEX):")
-# print("04" + "%064x" +str(PublicKey[0])+ "%064x" +str(PublicKey[1]))
 
-# print("the official Public Key - compressed:")
-if PublicKey[1] % 2 == 1: # If the Y value for the Public Key is odd.
+if PublicKey[1] % 2 == 1: 
     print ("03"+str(hex(PublicKey[0])[2:]).zfill(64))
-else: # Or else, if the Y value is even.
+else: 
     print("02"+str(hex(int(PublicKey[0]))[2:]).zfill(64))
+print("Signature Generation")
+
+xRandSignPoint, yRandSignPoint = EccMultiply(GPoint,RandNum)
+r = xRandSignPoint % int(N,16)
+s = ((HashOfThingToSign + r*privKey)*(modinv(RandNum,int(N,16)))) % int(N,16)
+print("Signature Verification")
+w = modinv(s,int(N,16))
+xu1, yu1 = EccMultiply(GPoint,(HashOfThingToSign * w)%int(N,16))
+xu2, yu2 = EccMultiply(PublicKey,(r*w)%int(N,16))
+x,y = ECadd((xu1,yu1),(xu2,yu2))
+print(r==x)
