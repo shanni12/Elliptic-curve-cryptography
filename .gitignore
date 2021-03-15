@@ -1,2 +1,4 @@
 gui.py
 *.pyc
+get-pip.py
+*node_modules
