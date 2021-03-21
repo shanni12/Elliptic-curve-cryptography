@@ -19,3 +19,4 @@ def signature_verification(PublicKey,r,s,HashOfThingToSign):
     x,y = ellipticcurve.ECadd((xu1,yu1),(xu2,yu2))
     print(r==x)
     return r==x
+

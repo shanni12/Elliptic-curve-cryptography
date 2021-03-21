@@ -16,7 +16,9 @@ class Wallet:
        self.address=str(uuid.uuid4())[0:8]
        self.private_key=ellipticcurve.privKeyGeneration()
        self.public_key=ellipticcurve.EccMultiply(ellipticcurve.GPoint,self.private_key)
-       
+    
+    def balance(self,transactionpool):
+        return Wallet.calculate_balance(transactionpool,self.address)  
     def sign(self,data):
         hash_datahex = crypto_hash(data)
         hashval = int("0x"+hash_datahex, 16)
@@ -31,7 +33,22 @@ class Wallet:
         (r,s)=signature
         ver = signatureGV.signature_verification(public_key,r,s,hashval) 
         return ver
+    @staticmethod
+    def calculate_balance(transactionpool,address):
+        balance=1000
+        print("calculate balance")
+        print(transactionpool.transaction_map)
+        if not transactionpool.transaction_map:
+            print("transaction pool true")
+            return balance
+        transactiondata=transactionpool.transaction_data()
        
+        for transaction in transactiondata:
+                if transaction['input']['address']==address:
+                    balance=transaction['output'][address]
+                elif address in transaction['output']:
+                    balance+=transaction['output'][address]
+        return balance 
    
 def main():
     wallet=Wallet()

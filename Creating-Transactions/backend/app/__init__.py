@@ -29,7 +29,7 @@ def route_wallet_transact():
     
     transaction_data=request.get_json()
     
-    transaction=Transaction(wallet,transaction_data['recipient'],transaction_data['amount'])
+    transaction=Transaction(wallet,transaction_data['recipient'],transaction_data['amount'],transactionpool)
     print(f'transaction.to_json():{transaction.to_json()}')
     transactionpool.set_transaction(transaction)
     return jsonify(transaction.to_json())
@@ -39,7 +39,7 @@ def route_wallet_transact():
 @app.route('/wallet/info')
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def route_wallet_info():
-    return jsonify({'address':wallet.address})
+    return jsonify({'address':wallet.address,'balance':wallet.balance(transactionpool)})
 
 # @app.route('/known-addresses')
 # @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
